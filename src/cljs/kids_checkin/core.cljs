@@ -14,9 +14,13 @@
 
 ;; -------------------------
 ;; Views
-
 (defn loader []
-  [:div "Loading..."])
+  [:div.loader
+   [:div {:class "uil-facebook-css blue" :style {:-webkit-transform "scale(0.6)"}}
+    [:div]
+    [:div]
+    [:div]]])
+
 
 (defn list-classes [checkins]
   [:div
