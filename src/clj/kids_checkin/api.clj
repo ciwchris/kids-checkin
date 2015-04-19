@@ -50,14 +50,18 @@
 
 (defn count-checkins [id checkins]
   (count (filter #(= id (get-in % [:group :id])) checkins)))
+(defn test-checkins []
+    {:144673 {:count 1, :name "Preschool # 2 (Green)"}, :108119 {:count 1, :name "Toddlers (Orange)"}, :108117 {:count 1, :name "Nursery (Red)"}, :108123 {:count 1, :name "Primary (Blue)"}, :89515 {:count 1, :name "Elementary (Purple)"}, :108120 {:count 1, :name "Preschool #1 (Yellow)"}})
 
-(defn create-checkin-map []
-  (let [body (:body (retrieve-checkins))
-        checkins (:checkins (json/read-str body :key-fn keyword))]
-    {
-     :144673 {:count (count-checkins 144673 checkins) :name "Preschool # 2 (Green)"}
-     :108119 {:count (count-checkins 108119 checkins) :name "Toddlers (Orange)"}
-     :108117 {:count (count-checkins 108117 checkins) :name "Nursery (Red)"}
-     :108123 {:count (count-checkins 108123 checkins) :name "Primary (Blue)"}
-     :89515 {:count (count-checkins 89515 checkins) :name "Elementary (Purple)"}
-     :108120 {:count (count-checkins 108120 checkins) :name "Preschool #1 (Yellow)"}}))
+(defn create-checkin-map [env]
+  (if (true? (:dev env))
+    (test-checkins)
+    (let [body (:body (retrieve-checkins))
+          checkins (:checkins (json/read-str body :key-fn keyword))]
+      {
+       :144673 {:count (count-checkins 144673 checkins) :name "Preschool # 2 (Green)"}
+       :108119 {:count (count-checkins 108119 checkins) :name "Toddlers (Orange)"}
+       :108117 {:count (count-checkins 108117 checkins) :name "Nursery (Red)"}
+       :108123 {:count (count-checkins 108123 checkins) :name "Primary (Blue)"}
+       :89515 {:count (count-checkins 89515 checkins) :name "Elementary (Purple)"}
+       :108120 {:count (count-checkins 108120 checkins) :name "Preschool #1 (Yellow)"}})))
