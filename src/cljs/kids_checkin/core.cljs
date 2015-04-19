@@ -8,9 +8,9 @@
 
 (def checkins (atom {}))
 
-(def timer-max (atom 6))
+(def timer-max 6)
 
-(def timer-count (atom @timer-max))
+(def timer-count (atom timer-max))
 
 ;; -------------------------
 ;; Views
@@ -34,7 +34,7 @@
 (defn checkin-page []
   [:div
    [list-classes @checkins]
-   [timer-boxes @timer-count (range @timer-max)]])
+   [timer-boxes @timer-count (range timer-max)]])
 
 (defn current-page []
   (if (empty? @checkins)
@@ -46,18 +46,20 @@
 (defn mount-root []
   (reagent/render [current-page] (.getElementById js/document "app")))
 
+(defn set-page-refresh []
+  (swap! timer-count (fn [] (mod (inc @timer-count) (+ 1 timer-max))))
+  (js/setTimeout #(get-checkins) 10000))
+
 (defn save-checkins [response]
-  (swap! checkins (fn [] response)))
+  (swap! checkins (fn [] response))
+  (set-page-refresh))
 
 (defn get-checkins []
-  (if (= @timer-max @timer-count)
-    (do
-      (GET "/checkins"
-           {:handler save-checkins})
-      (swap! timer-count (fn [] 0)))
-  (swap! timer-count inc)))
+  (if (<= timer-max @timer-count)
+    (GET "/checkins"
+         {:handler save-checkins})
+    (set-page-refresh)))
 
 (defn init! []
   (get-checkins)
-  (js/setInterval #(get-checkins) 10000)
   (mount-root))

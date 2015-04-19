@@ -64,7 +64,6 @@
          page-checkins (:checkins (json/read-str body :key-fn keyword))
          last-checkin-date (get-starting-date (last page-checkins))
          new-checkins (retrieve-new-checkins page-checkins)]
-     (println new-checkins)
      (if (and (= 20 (count new-checkins)) (= today last-checkin-date))
        (retrieve-checkins (inc page-number) (into checkins new-checkins))
        (let [complete-checkin-list (into checkins (filter #(= today (get-starting-date %)) new-checkins))]
