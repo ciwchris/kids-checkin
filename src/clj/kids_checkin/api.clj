@@ -9,6 +9,8 @@
   (:import (javax.crypto Mac)
            (javax.crypto.spec SecretKeySpec)))
 
+(def checkins-store (atom []))
+
 (defn load-config []
   (edn/read-string (slurp "src/clj/config.edn")))
 
@@ -51,16 +53,23 @@
 (defn get-starting-date [checkin]
   (apply str (take 10 (get-in checkin [:event :starting_at]))))
 
+(defn retrieve-new-checkins [checkins]
+  (take-while #(not= (:barcode %) (:barcode (first @checkins-store))) checkins))
+
 (defn retrieve-checkins
   ([] (retrieve-checkins 1 []))
   ([page-number checkins]
    (let [today (.toString (time/today) "MM/dd/yyyy")
          body (:body (retrieve-checkins-page page-number))
          page-checkins (:checkins (json/read-str body :key-fn keyword))
-         last-checkin-date (get-starting-date (last page-checkins))]
-     (if (= today last-checkin-date)
-       (retrieve-checkins (inc page-number) (into checkins page-checkins))
-       (into checkins (filter #(= today (get-starting-date %)) page-checkins))))))
+         last-checkin-date (get-starting-date (last page-checkins))
+         new-checkins (retrieve-new-checkins page-checkins)]
+     (println new-checkins)
+     (if (and (= 20 (count new-checkins)) (= today last-checkin-date))
+       (retrieve-checkins (inc page-number) (into checkins new-checkins))
+       (let [complete-checkin-list (into checkins (filter #(= today (get-starting-date %)) new-checkins))]
+         (swap! checkins-store into complete-checkin-list)
+         @checkins-store)))))
 
 (defn count-checkins [id checkins]
   (count (filter #(= id (get-in % [:group :id])) checkins)))
@@ -74,7 +83,7 @@
    {:id 108123 :color "blue" :count 1 :max 12 :name "Primary"}])
 
 (defn create-checkin-map [env]
-  (if (false? (:dev env))
+  (if (true? (:dev env))
     (test-checkins)
     (let [checkins (retrieve-checkins)]
       [{:id 108117 :max 12 :color "red" :count (count-checkins 108117 checkins) :name "Nursery"}
