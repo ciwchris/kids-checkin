@@ -9,6 +9,7 @@
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [ring-server "0.4.0"]
                  [cljsjs/react "0.13.1-0"]
+                 [cljs-ajax "0.3.11"]
                  [clj-time "0.9.0"]
                  [clj-time "0.9.0"]
                  [org.clojure/data.json "0.2.6"]

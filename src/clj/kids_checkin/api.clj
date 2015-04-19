@@ -50,18 +50,23 @@
 
 (defn count-checkins [id checkins]
   (count (filter #(= id (get-in % [:group :id])) checkins)))
+
 (defn test-checkins []
-    {:144673 {:count 1, :name "Preschool # 2 (Green)"}, :108119 {:count 1, :name "Toddlers (Orange)"}, :108117 {:count 1, :name "Nursery (Red)"}, :108123 {:count 1, :name "Primary (Blue)"}, :89515 {:count 1, :name "Elementary (Purple)"}, :108120 {:count 1, :name "Preschool #1 (Yellow)"}})
+  [{:id 108117 :color "red" :count 1 :max 12 :name "Nursery"}
+   {:id 108119 :color "orange" :count 1 :max 12 :name "Toddlers"}
+   {:id 108120 :color "yellow" :count 1 :max 12 :name "Preschool #1"}
+   {:id 144673 :color "green" :count 1 :max 12 :name "Preschool # 2"}
+   {:id 89515 :color "purple" :count 1 :max 12 :name "Elementary"}
+   {:id 108123 :color "blue" :count 1 :max 12 :name "Primary"}])
 
 (defn create-checkin-map [env]
-  (if (true? (:dev env))
+  (if (false? (:dev env))
     (test-checkins)
     (let [body (:body (retrieve-checkins))
           checkins (:checkins (json/read-str body :key-fn keyword))]
-      {
-       :144673 {:count (count-checkins 144673 checkins) :name "Preschool # 2 (Green)"}
-       :108119 {:count (count-checkins 108119 checkins) :name "Toddlers (Orange)"}
-       :108117 {:count (count-checkins 108117 checkins) :name "Nursery (Red)"}
-       :108123 {:count (count-checkins 108123 checkins) :name "Primary (Blue)"}
-       :89515 {:count (count-checkins 89515 checkins) :name "Elementary (Purple)"}
-       :108120 {:count (count-checkins 108120 checkins) :name "Preschool #1 (Yellow)"}})))
+      [{:id 108117 :max 12 :color "red" :count (count-checkins 108117 checkins) :name "Nursery"}
+       {:id 108119 :max 12 :color "orange" :count (count-checkins 108119 checkins) :name "Toddlers"}
+       {:id 108120 :max 12 :color "yellow" :count (count-checkins 108120 checkins) :name "Preschool #1"}
+       {:id 144673 :max 12 :color "green" :count (count-checkins 144673 checkins) :name "Preschool # 2"}
+       {:id 89515 :max 12 :color "purple" :count (count-checkins 89515 checkins) :name "Elementary"}
+       {:id 108123 :max 12 :color "blue" :count (count-checkins 108123 checkins) :name "Primary"}])))

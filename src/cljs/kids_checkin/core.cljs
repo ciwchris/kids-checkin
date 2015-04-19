@@ -1,52 +1,63 @@
 (ns kids-checkin.core
-    (:require [reagent.core :as reagent :refer [atom]]
-              [reagent.session :as session]
-              [secretary.core :as secretary :include-macros true]
-              [goog.events :as events]
-              [goog.history.EventType :as EventType]
-              [cljsjs.react :as react])
-    (:import goog.History))
+  (:require [reagent.core :as reagent :refer [atom]]
+            [ajax.core :refer [GET]]
+            [cljsjs.react :as react]))
+
+;; -------------------------
+;; State
+
+(def checkins (atom {}))
+
+(def timer-max (atom 6))
+
+(def timer-count (atom @timer-max))
 
 ;; -------------------------
 ;; Views
 
-(defn home-page []
-  [:div [:h2 "Welcome to kids-checkin"]
-   [:div [:a {:href "#/about"} "go to about page"]]])
+(defn loader []
+  [:div "Loading..."])
 
-(defn about-page []
-  [:div [:h2 "About kids-checkin"]
-   [:div [:a {:href "#/"} "go to the home page"]]])
+(defn list-classes [checkins]
+  [:div
+   [:ul
+    (for [class checkins]
+      ^{:key (:id class)} [:li
+                           [:div {:style {:background-color (:color class)}}
+                            (str (:name class) " " (:count class) "/" (:max class))]])]])
+
+(defn timer-boxes [timer-count boxes]
+  [:div
+   (for [box boxes]
+     ^{:key box} [:div {:class (str "box" (if (< box timer-count) " full-box"))}])])
+
+(defn checkin-page []
+  [:div
+   [list-classes @checkins]
+   [timer-boxes @timer-count (range @timer-max)]])
 
 (defn current-page []
-  [:div [(session/get :current-page)]])
-
-;; -------------------------
-;; Routes
-(secretary/set-config! :prefix "#")
-
-(secretary/defroute "/" []
-  (session/put! :current-page #'home-page))
-
-(secretary/defroute "/about" []
-  (session/put! :current-page #'about-page))
-
-;; -------------------------
-;; History
-;; must be called after routes have been defined
-(defn hook-browser-navigation! []
-  (doto (History.)
-    (events/listen
-     EventType/NAVIGATE
-     (fn [event]
-       (secretary/dispatch! (.-token event))))
-    (.setEnabled true)))
+  (if (empty? @checkins)
+    [loader]
+    [checkin-page]))
 
 ;; -------------------------
 ;; Initialize app
 (defn mount-root []
   (reagent/render [current-page] (.getElementById js/document "app")))
 
+(defn save-checkins [response]
+  (swap! checkins (fn [] response)))
+
+(defn get-checkins []
+  (if (= @timer-max @timer-count)
+    (do
+      (GET "/checkins"
+           {:handler save-checkins})
+      (swap! timer-count (fn [] 0)))
+  (swap! timer-count inc)))
+
 (defn init! []
-  (hook-browser-navigation!)
+  (get-checkins)
+  (js/setInterval #(get-checkins) 10000)
   (mount-root))

@@ -17,5 +17,5 @@
   (not-found "Not Found"))
 
 (def app
-  (let [handler (wrap-restful-format (wrap-defaults routes site-defaults) :formats [:edn])]
+  (let [handler (wrap-restful-format (wrap-defaults routes site-defaults) :formats [:transit-json])]
     (if (env :dev?) (wrap-exceptions handler) handler)))
