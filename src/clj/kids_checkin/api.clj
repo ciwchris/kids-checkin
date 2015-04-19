@@ -78,8 +78,8 @@
    {:id 108119 :color "orange" :count 1 :max 12 :name "Toddlers"}
    {:id 108120 :color "yellow" :count 1 :max 12 :name "Preschool #1"}
    {:id 144673 :color "green" :count 1 :max 12 :name "Preschool # 2"}
-   {:id 89515 :color "purple" :count 1 :max 12 :name "Elementary"}
-   {:id 108123 :color "blue" :count 1 :max 12 :name "Primary"}])
+   {:id 108123 :color "blue" :count 1 :max 12 :name "Primary"}
+   {:id 89515 :color "purple" :count 1 :max 12 :name "Elementary"}])
 
 (defn create-checkin-map [env]
   (if (true? (:dev env))
@@ -89,5 +89,5 @@
        {:id 108119 :max 12 :color "orange" :count (count-checkins 108119 checkins) :name "Toddlers"}
        {:id 108120 :max 12 :color "yellow" :count (count-checkins 108120 checkins) :name "Preschool #1"}
        {:id 144673 :max 12 :color "green" :count (count-checkins 144673 checkins) :name "Preschool # 2"}
-       {:id 89515 :max 12 :color "purple" :count (count-checkins 89515 checkins) :name "Elementary"}
-       {:id 108123 :max 12 :color "blue" :count (count-checkins 108123 checkins) :name "Primary"}])))
+       {:id 108123 :max 12 :color "blue" :count (count-checkins 108123 checkins) :name "Primary"}
+       {:id 89515 :max 12 :color "purple" :count (count-checkins 89515 checkins) :name "Elementary"}])))
