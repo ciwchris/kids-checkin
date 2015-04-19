@@ -43,10 +43,24 @@
          "Accept" "application/vnd.thecity.admin.v1+json"
          }))
 
-(defn retrieve-checkins []
-  (let [url (str "https://api.onthecity.org/checkins")
-        headers (create-headers url)]
-    (client/get url {:headers headers})))
+(defn retrieve-checkins-page [page-number]
+  (let [url (str "https://api.onthecity.org/checkins?page=" page-number)
+         headers (create-headers url)]
+     (client/get url {:headers headers})))
+
+(defn get-starting-date [checkin]
+  (apply str (take 10 (get-in checkin [:event :starting_at]))))
+
+(defn retrieve-checkins
+  ([] (retrieve-checkins 1 []))
+  ([page-number checkins]
+   (let [today (.toString (time/today) "MM/dd/yyyy")
+         body (:body (retrieve-checkins-page page-number))
+         page-checkins (:checkins (json/read-str body :key-fn keyword))
+         last-checkin-date (get-starting-date (last page-checkins))]
+     (if (= today last-checkin-date)
+       (retrieve-checkins (inc page-number) (into checkins page-checkins))
+       (into checkins (filter #(= today (get-starting-date %)) page-checkins))))))
 
 (defn count-checkins [id checkins]
   (count (filter #(= id (get-in % [:group :id])) checkins)))
@@ -62,8 +76,7 @@
 (defn create-checkin-map [env]
   (if (false? (:dev env))
     (test-checkins)
-    (let [body (:body (retrieve-checkins))
-          checkins (:checkins (json/read-str body :key-fn keyword))]
+    (let [checkins (retrieve-checkins)]
       [{:id 108117 :max 12 :color "red" :count (count-checkins 108117 checkins) :name "Nursery"}
        {:id 108119 :max 12 :color "orange" :count (count-checkins 108119 checkins) :name "Toddlers"}
        {:id 108120 :max 12 :color "yellow" :count (count-checkins 108120 checkins) :name "Preschool #1"}
