@@ -12,8 +12,8 @@
 (defroutes routes
   (GET "/" [] (render-file "templates/index.html" {:dev (env :dev?)}))
   (GET "/checkins" [] {:status 200
-                       :body (api/create-checkin-map {:dev (env :dev?)})})
-  (POST "/newcheckin" request (api/register-checkin {:dev (env :dev?)}))
+                       :body (api/create-list-of-checkin-count-by-group {:dev (env :dev?)})})
+  (POST "/newcheckin" request (api/register-checkin request {:dev (env :dev?)}))
   (resources "/")
   (not-found "Not Found"))
 
