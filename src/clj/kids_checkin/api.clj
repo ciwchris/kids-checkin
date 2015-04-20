@@ -91,3 +91,7 @@
        {:id 144673 :max 12 :color "green" :count (count-checkins 144673 checkins) :name "Preschool # 2"}
        {:id 108123 :max 12 :color "blue" :count (count-checkins 108123 checkins) :name "Primary"}
        {:id 89515 :max 12 :color "purple" :count (count-checkins 89515 checkins) :name "Elementary"}])))
+
+(defn register-checkin [env]
+  (println "web hook was called")
+  "registered")
