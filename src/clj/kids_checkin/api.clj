@@ -11,6 +11,8 @@
 
 (def checkins-store (atom {}))
 (def checkins-per-page 20)
+(def clients (atom {}))
+
 
 (defn- load-config
   "Load thecity API config"
@@ -93,7 +95,7 @@
   we be stored in an application cache, then return it for use"
   ([] (retrieve-checkins 1 @checkins-store))
   ([page-number checkins]
-   (let [today (.toString (time/today) "MM/dd/yyyy")
+   (let [today "06/21/2015";;(.toString (time/today) "MM/dd/yyyy")
          new-checkins (retrieve-checkins-for-result-page page-number)
          new-checkin-store (add-new-checkins-to-checkins-store checkins new-checkins today)]
      (if (not= (count new-checkin-store) (count checkins))
@@ -124,17 +126,18 @@
 (defn register-checkin
   "Called by thecity when a new checkin occurs"
   [request env]
-  (if (false? (:dev env))
+  (if (true? (:dev env))
     (fake-list-of-checkin-count-by-group)
-  (let [checkins (retrieve-checkins)
-        group-count (create-group-count checkins)]
-    group-count
-    ;; update clients with new group counts
-    )))
+    (let [checkins (retrieve-checkins)
+          group-count (create-group-count checkins)]
+      nil
+      ;;update clients with new group counts
+      ))
+  )
 
 (defn create-list-of-checkin-count-by-group
   "Creates a count of checkins for each checkin group which has occured today on the city"
   [env]
-  (if (false? (:dev env))
+  (if (true? (:dev env))
     (fake-list-of-checkin-count-by-group)
-    (create-group-count (create-group-count @checkins-store))))
+    (create-group-count @checkins-store)))

@@ -13,7 +13,8 @@
   (GET "/" [] (render-file "templates/index.html" {:dev (env :dev?)}))
   (GET "/checkins" [] {:status 200
                        :body (api/create-list-of-checkin-count-by-group {:dev (env :dev?)})})
-  (POST "/newcheckin" request (api/register-checkin request {:dev (env :dev?)}))
+  (POST "/newcheckin" request {:status 200
+                               :body (api/register-checkin request {:dev (env :dev?)})})
   (resources "/")
   (not-found "Not Found"))
 
