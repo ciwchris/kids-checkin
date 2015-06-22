@@ -1,8 +1,9 @@
 (ns kids-checkin.server
   (:require [kids-checkin.handler :refer [app]]
-            [ring.adapter.jetty :refer [run-jetty]])
+            [environ.core :refer [env]]
+            [org.httpkit.server :refer [run-server]])
   (:gen-class))
 
  (defn -main [& args]
-   (let [port (Integer/parseInt (or (System/getenv "PORT") "3000"))]
-     (run-jetty app {:port port :join? false})))
+   (let [port (Integer/parseInt (or (env :port) "3449"))]
+     (run-server app {:port port :join? false})))

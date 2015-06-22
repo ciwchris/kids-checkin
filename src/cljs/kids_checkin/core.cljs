@@ -6,6 +6,8 @@
 ;; -------------------------
 ;; State
 
+(def message (atom nil))
+
 (def checkins (atom {}))
 
 (def timer-max 6)
@@ -64,6 +66,11 @@
          {:handler save-checkins})
     (set-page-refresh)))
 
+(defn connect-websocket []
+  (let [ws (js/WebSocket. "ws://localhost:3449/message")]
+    (aset ws "onmessage" (fn [m] (.log js/console "hello")))))
+
 (defn init! []
   (get-checkins)
-  (mount-root))
+  (mount-root)
+  (connect-websocket))

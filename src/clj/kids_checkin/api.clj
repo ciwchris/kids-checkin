@@ -1,11 +1,12 @@
 (ns kids-checkin.api
   (:require
-   [clojure.edn :as edn]
-   [clojure.data.json :as json]
-   [clojure.pprint :as p]
-   [clj-http.client :as client]
-   [ring.util.codec :only [base64-encode form-encode] :as r]
-   (clj-time [core :as time] [coerce :as tc]))
+    [clojure.edn :as edn]
+    [clojure.data.json :as json]
+    [clojure.pprint :as p]
+    [clj-http.client :as client]
+    [ring.util.codec :only [base64-encode form-encode] :as r]
+    [org.httpkit.server :refer [send!]]
+    (clj-time [core :as time] [coerce :as tc]))
   (:import (javax.crypto Mac)
            (javax.crypto.spec SecretKeySpec)))
 
@@ -43,11 +44,11 @@
         unix-time (tc/to-long (time/now))
         string-to-sign (str unix-time "GET" url)
         signed-string (sign-and-encode-text string-to-sign (:key config))]
-        {"X-City-Sig" signed-string
-         "X-City-User-Token" (:user-token config)
-         "X-City-Time" (str unix-time)
-         "Accept" "application/vnd.thecity.admin.v1+json"
-         }))
+    {"X-City-Sig" signed-string
+     "X-City-User-Token" (:user-token config)
+     "X-City-Time" (str unix-time)
+     "Accept" "application/vnd.thecity.admin.v1+json"
+     }))
 
 (defn- get-starting-date
   "Retrieves starting date for checkin and return date portion by taking first 10 chars"
@@ -81,14 +82,14 @@
 
 (defn filter-by-barcode [checkin-store new-checkins]
   (reduce #(assoc %1 
-                   (keyword (str (:barcode %2)))
-                   (get-in %2 [:group :id]))
+                  (keyword (str (:barcode %2)))
+                  (get-in %2 [:group :id]))
           checkin-store new-checkins))
 
 (defn add-new-checkins-to-checkins-store [checkin-store new-checkins today]
   (->> new-checkins
-      (filter-by-date today)
-      (filter-by-barcode checkin-store)))
+       (filter-by-date today)
+       (filter-by-barcode checkin-store)))
 
 (defn- retrieve-checkins
   "Page through the list of checkins from thecity and add them to a vector which
@@ -101,8 +102,8 @@
      (if (not= (count new-checkin-store) (count checkins))
        (retrieve-checkins (inc page-number) new-checkin-store)
        (do
-            (swap! checkins-store into checkins)
-            @checkins-store)))))
+         (swap! checkins-store into checkins)
+         @checkins-store)))))
 
 (defn create-group-count
   [checkins]
@@ -127,9 +128,15 @@
   "Called by thecity when a new checkin occurs"
   [request env]
   (if (true? (:dev env))
-    (fake-list-of-checkin-count-by-group)
+    (do
+      (doseq [client @clients]
+        (send! (key client) "hello" false))
+      nil
+      )
     (let [checkins (retrieve-checkins)
           group-count (create-group-count checkins)]
+      (doseq [client @clients]
+        (send! (key client) group-count false))
       nil
       ;;update clients with new group counts
       ))

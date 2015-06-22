@@ -22,6 +22,7 @@
                  [ring "1.3.2"]
                  [ring/ring-defaults "0.1.4"]
                  [ring-middleware-format "0.5.0"]
+                 [http-kit "2.1.19"]
                  [prone "0.8.1"]
                  [compojure "1.3.2"]
                  [selmer "0.8.2"]
@@ -73,6 +74,7 @@
                                 (pjstadig.humane-test-output/activate!)]
 
                    :figwheel {:http-server-root "public"
+                              :nrepl-port 7888
                               :server-port 3449
                               :css-dirs ["resources/public/css"]
                               :ring-handler kids-checkin.handler/app}
