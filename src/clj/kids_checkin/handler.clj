@@ -22,6 +22,7 @@
   (GET "/message" [] ws))
 
 (defroutes site-routes
+(GET "/message-j" [] ws)
   (GET "/" [] (render-file "templates/index.html" {:dev (env :dev?)}))
   (GET "/checkins" [] {:status 200
                        :body (api/create-list-of-checkin-count-by-group {:dev (env :dev?)})})

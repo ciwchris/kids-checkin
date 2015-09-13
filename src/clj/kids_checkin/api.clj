@@ -3,11 +3,13 @@
     [clojure.edn :as edn]
     [clojure.data.json :as json]
     [clojure.pprint :as p]
+    [cognitect.transit :as t]
     [clj-http.client :as client]
     [ring.util.codec :only [base64-encode form-encode] :as r]
     [org.httpkit.server :refer [send!]]
     (clj-time [core :as time] [coerce :as tc]))
   (:import (javax.crypto Mac)
+           (java.io ByteArrayInputStream ByteArrayOutputStream)
            (javax.crypto.spec SecretKeySpec)))
 
 (def checkins-store (atom {}))
@@ -96,7 +98,7 @@
   we be stored in an application cache, then return it for use"
   ([] (retrieve-checkins 1 @checkins-store))
   ([page-number checkins]
-   (let [today "06/21/2015";;(.toString (time/today) "MM/dd/yyyy")
+   (let [today (.toString (time/today) "MM/dd/yyyy")
          new-checkins (retrieve-checkins-for-result-page page-number)
          new-checkin-store (add-new-checkins-to-checkins-store checkins new-checkins today)]
      (if (not= (count new-checkin-store) (count checkins))
@@ -124,27 +126,19 @@
    {:id 108123 :color "blue" :count 1 :max 12 :name "Primary"}
    {:id 89515 :color "purple" :count 1 :max 12 :name "Elementary"}])
 
-(defn register-checkin
-  "Called by thecity when a new checkin occurs"
-  [request env]
-  (if (true? (:dev env))
-    (do
-      (doseq [client @clients]
-        (send! (key client) "hello" false))
-      nil
-      )
-    (let [checkins (retrieve-checkins)
-          group-count (create-group-count checkins)]
-      (doseq [client @clients]
-        (send! (key client) group-count false))
-      nil
-      ;;update clients with new group counts
-      ))
-  )
-
 (defn create-list-of-checkin-count-by-group
   "Creates a count of checkins for each checkin group which has occured today on the city"
   [env]
   (if (true? (:dev env))
     (fake-list-of-checkin-count-by-group)
     (create-group-count @checkins-store)))
+
+(defn register-checkin
+  "Called by thecity when a new checkin occurs"
+  [request env]
+  (let [out (ByteArrayOutputStream. 4096)
+        writer (t/writer out :json)
+        checkins (t/write writer (create-list-of-checkin-count-by-group env))]
+      (doseq [client @clients]
+        (send! (key client) (.toString out) false))
+      nil))

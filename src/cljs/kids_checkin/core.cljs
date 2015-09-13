@@ -1,18 +1,13 @@
 (ns kids-checkin.core
   (:require [reagent.core :as reagent :refer [atom]]
             [ajax.core :refer [GET]]
-            [cljsjs.react :as react]))
+            [cljsjs.react :as react]
+            [kids-checkin.websockets :as ws]))
 
 ;; -------------------------
 ;; State
 
-(def message (atom nil))
-
-(def checkins (atom {}))
-
-(def timer-max 6)
-
-(def timer-count (atom timer-max))
+(defonce checkins (atom {}))
 
 ;; -------------------------
 ;; Views
@@ -32,15 +27,9 @@
                            [:div {:style {:background-color (:color class)}}
                             (str (:name class) " " (:count class) "/" (:max class))]])]])
 
-(defn timer-boxes [timer-count boxes]
-  [:div
-   (for [box boxes]
-     ^{:key box} [:div {:class (str "box" (if (< box timer-count) " full-box"))}])])
-
 (defn checkin-page []
   [:div
-   [list-classes @checkins]
-   [timer-boxes @timer-count (range timer-max)]])
+   [list-classes @checkins]])
 
 (defn current-page []
   (if (empty? @checkins)
@@ -52,25 +41,16 @@
 (defn mount-root []
   (reagent/render [current-page] (.getElementById js/document "app")))
 
-(defn set-page-refresh []
-  (swap! timer-count (fn [] (mod (inc @timer-count) (+ 1 timer-max))))
-  (js/setTimeout #(get-checkins) 10000))
-
 (defn save-checkins [response]
-  (swap! checkins (fn [] response))
-  (set-page-refresh))
+  (swap! checkins (fn [] response)))
 
 (defn get-checkins []
-  (if (<= timer-max @timer-count)
-    (GET "/checkins"
-         {:handler save-checkins})
-    (set-page-refresh)))
+    (GET "/checkins" {:handler save-checkins}))
 
-(defn connect-websocket []
-  (let [ws (js/WebSocket. "ws://localhost:3449/message")]
-    (aset ws "onmessage" (fn [m] (.log js/console "hello")))))
+(defn update-checkins! [response]
+  (swap! checkins (fn [] response)))
 
 (defn init! []
   (get-checkins)
-  (mount-root)
-  (connect-websocket))
+  (ws/make-websocket! "ws://kids-checkin.herokuapp.com/message" update-checkins!)
+  (mount-root))
